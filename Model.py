@@ -41,9 +41,11 @@ class up(nn.Module):
         self.conv = conv_block(out_c+out_c, out_c)
 
     def forward(self, inputs, skip):
+
         conv_t_out = self.up(inputs)
-        concat = torch.concat((conv_t_out,skip),dim=1)
+        concat     = torch.concat((conv_t_out,skip),dim=1)
         decoder_output = self.conv(concat)
+
         return decoder_output
     
 
@@ -94,7 +96,7 @@ if __name__ == "__main__":
 
     start=time.time()
 
-    x = torch.randn((2, 3, 64, 64))
+    x = torch.randn((1, 3, 128, 128))
     f = UNET(1)
     y = f(x)
     print(x.shape)

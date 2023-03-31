@@ -16,19 +16,19 @@ class EncoderBottleneck(nn.Module):
 
         width = int(out_channels * (base_width / 64))
 
-        self.conv1 = nn.Conv2d(in_channels, width, kernel_size=1, stride=1, bias=False)
-        self.norm1 = nn.BatchNorm2d(width)
+        self.conv1 = nn.Conv2d(in_channels, width, kernel_size=1, stride=1, bias=False)  
+        self.norm1 = nn.BatchNorm2d(out_channels)    #nn.BatchNorm2d(width)
 
         self.conv2 = nn.Conv2d(width, width, kernel_size=3, stride=2, groups=1, padding=1, dilation=1, bias=False)
-        self.norm2 = nn.BatchNorm2d(width)
+        self.norm2 = nn.BatchNorm2d(out_channels)     #nn.BatchNorm2d(width)
 
         self.conv3 = nn.Conv2d(width, out_channels, kernel_size=1, stride=1, bias=False)
         self.norm3 = nn.BatchNorm2d(out_channels)
 
         self.relu = nn.ReLU(inplace=True)
 
-    def forward(self, x):
-        x_down = self.downsample(x)
+    def forward(self, x):            # 1x 128 x 64 x 64
+        x_down = self.downsample(x)  # 1x 256 x 32 x 32
 
         x = self.conv1(x)
         x = self.norm1(x)
@@ -89,17 +89,17 @@ class Encoder(nn.Module):
         self.conv2 = nn.Conv2d(out_channels * 8, 512, kernel_size=3, stride=1, padding=1)
         self.norm2 = nn.BatchNorm2d(512)
 
-    def forward(self, x):
-        x = self.conv1(x)
-        x = self.norm1(x)
-        x1 = self.relu(x)
+    def forward(self, x):       # 1x  3 x 128 x 128
+        x = self.conv1(x)       # 1x 128 x 64 x 64
+        x = self.norm1(x)       # 1x 128 x 64 x 64
+        x1 = self.relu(x)       # 1x 128 x 64 x 64
 
-        x2 = self.encoder1(x1)
-        x3 = self.encoder2(x2)
-        x = self.encoder3(x3)
+        x2 = self.encoder1(x1)  # 1x 256 x 32 x 32
+        x3 = self.encoder2(x2)  # 1x 512 x 16 x 16
+        x = self.encoder3(x3)   # 1x 1024 x 8 x 8
 
-        x = self.vit(x)
-        x = rearrange(x, "b (x y) c -> b c x y", x=self.vit_img_dim, y=self.vit_img_dim)
+        x = self.vit(x)         # 1x 64 x 1024
+        x = rearrange(x, "b (x y) c -> b c x y", x=self.vit_img_dim, y=self.vit_img_dim)  # 1x 1024 x 8 x 8
 
         x = self.conv2(x)
         x = self.norm2(x)

@@ -81,6 +81,7 @@ if __name__ == "__main__":
         precision   = metrics_score[3]/len(test_loader)
         acc         = metrics_score[4]/len(test_loader)
         print(f"Jaccard: {jaccard:1.4f} - F1: {f1:1.4f} - Recall: {recall:1.4f} - Precision: {precision:1.4f} - Acc: {acc:1.4f}")
+        print(len(test_loader))
 
 
 '''

@@ -17,13 +17,17 @@ def main():
     n_classes   = 1
     batch_size  = 2
     num_workers = 2
-    epochs      = 30
+    epochs      = 1
     l_r         = 0.001
 
+    # Defining model and training options
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("Using device: ", device, f"({torch.cuda.get_device_name(device)})" if torch.cuda.is_available() else "")
 
     train_loader,test_loader = loader(batch_size,num_workers,shuffle=True)
-    model     = UNET(n_classes)
-    #model.load_state_dict(torch.load(checkpoint_path))
+    model     = UNET(n_classes).to(device)
+    
+    model.load_state_dict(torch.load(checkpoint_path))
 
     optimizer = Adam(model.parameters(), lr=l_r)
     loss_function      = Dice_CE_Loss()
@@ -36,7 +40,8 @@ def main():
         model.train()
         for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1} in training", leave=False):
 
-            images,labels   = batch                
+            images,labels   = batch  
+            images,labels   = images.to(device), labels.to(device)              
             model_output    = model(images)
 
             if n_classes == 1:
@@ -73,7 +78,8 @@ def main():
         with torch.no_grad():
             for batch in tqdm(test_loader, desc=f" Epoch {epoch + 1} in validation", leave=False):
 
-                images,labels = batch
+                images,labels   = batch  
+                images,labels   = images.to(device), labels.to(device)   
                 model_output  = model(images)
                 loss          = loss_function.Dice_BCE_Loss(model_output, labels)
                 valid_loss   += loss.item()
