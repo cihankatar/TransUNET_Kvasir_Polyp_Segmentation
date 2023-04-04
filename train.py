@@ -67,8 +67,8 @@ def main():
             loss_sum = train_loss + loss_sum
 
            # print(f"  training loss for one batch: {train_loss} ")
-        epoch_loss.append(loss_sum.detach().numpy()/len(train_loader))
-        print(f"Epoch {epoch + 1}/{epochs}, Epoch loss = {epoch_loss[idx]}")
+            epoch_loss.append(loss_sum.detach()/len(train_loader))
+            print(f"Epoch {epoch + 1}/{epochs}, Epoch loss = {epoch_loss[idx]}")
 
        #if epoch>2:
 
