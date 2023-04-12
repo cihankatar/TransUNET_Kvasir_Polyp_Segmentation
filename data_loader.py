@@ -5,7 +5,6 @@ from Custom_Dataset import KVasir_dataset
 #from Test_Train_Split import split_main
 from glob import glob
 
-
 def loader(batch_size,num_workers,shuffle):
 
     train_im_path   = "train/images"
