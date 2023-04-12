@@ -17,7 +17,7 @@ def main():
     n_classes   = 1
     batch_size  = 2
     num_workers = 2
-    epochs      = 1
+    epochs      = 100
     l_r         = 0.001
 
     # Defining model and training options
@@ -26,8 +26,8 @@ def main():
 
     train_loader,test_loader = loader(batch_size,num_workers,shuffle=True)
     model     = UNET(n_classes).to(device)
-    
-    model.load_state_dict(torch.load(checkpoint_path))
+    model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('cpu')))
+
 
     optimizer = Adam(model.parameters(), lr=l_r)
     loss_function      = Dice_CE_Loss()
@@ -67,8 +67,8 @@ def main():
             loss_sum = train_loss + loss_sum
 
            # print(f"  training loss for one batch: {train_loss} ")
-            epoch_loss.append(loss_sum.detach()/len(train_loader))
-            print(f"Epoch {epoch + 1}/{epochs}, Epoch loss = {epoch_loss[idx]}")
+        epoch_loss.append(loss_sum.detach()/len(train_loader))
+        print(f"Epoch {epoch + 1}/{epochs}, Epoch loss = {epoch_loss[idx]}")
 
        #if epoch>2:
 

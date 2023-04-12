@@ -115,9 +115,8 @@ class ViT(nn.Module):
             self.mlp_head = nn.Linear(embedding_dim, num_classes)
 
     def forward(self, x):
-        img_patches = rearrange(x,
-                                'b c (patch_x x) (patch_y y) -> b (x y) (patch_x patch_y c)',
-                                patch_x=self.patch_dim, patch_y=self.patch_dim)
+        img_patches = rearrange(x, 'b c (patch_x x) (patch_y y) -> b (x y) (patch_x patch_y c)',
+                                    patch_x=self.patch_dim, patch_y=self.patch_dim)
 
         batch_size, tokens, _ = img_patches.shape
 
