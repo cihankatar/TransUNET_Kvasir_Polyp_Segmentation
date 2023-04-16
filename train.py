@@ -7,6 +7,7 @@ from one_hot_encode import one_hot,label_encode
 from data_loader import loader
 from Model import UNET
 from Loss import Dice_CE_Loss
+from transunet import TransUNet
 
 def main():
 
@@ -17,7 +18,7 @@ def main():
     n_classes   = 1
     batch_size  = 2
     num_workers = 2
-    epochs      = 100
+    epochs      = 20
     l_r         = 0.001
 
     # Defining model and training options
@@ -25,19 +26,27 @@ def main():
     print("Using device: ", device, f"({torch.cuda.get_device_name(device)})" if torch.cuda.is_available() else "")
 
     train_loader,test_loader = loader(batch_size,num_workers,shuffle=True)
-    model     = UNET(n_classes).to(device)
-    model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('cpu')))
+
+    model = TransUNet(img_dim=64,
+                          in_channels=3,
+                          out_channels=128,
+                          head_num=4,
+                          mlp_dim=512,
+                          block_num=8,
+                          encoder_scale=16,
+                          class_num=1)
+    
+    #model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('cpu')))
 
 
     optimizer = Adam(model.parameters(), lr=l_r)
     loss_function      = Dice_CE_Loss()
-    epoch_loss = []
-    idx=0
+    
     for epoch in trange(epochs, desc="Training"):
 
-        train_loss = 0.0
-        loss_sum = 0.0
+        epoch_loss = 0.0
         model.train()
+
         for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1} in training", leave=False):
 
             images,labels   = batch  
@@ -59,21 +68,17 @@ def main():
                 train_loss      = loss_function.CE_loss(model_output, targets_f)
 
 
-            train_loss     += train_loss.detach().item() / len(train_loader)
+            epoch_loss     += train_loss.item() 
             optimizer.zero_grad()
             train_loss.backward()
             optimizer.step()
 
-            loss_sum = train_loss + loss_sum
+            print(f"batch loss = {train_loss}")
 
-           # print(f"  training loss for one batch: {train_loss} ")
-        epoch_loss.append(loss_sum.detach()/len(train_loader))
-        print(f"Epoch {epoch + 1}/{epochs}, Epoch loss = {epoch_loss[idx]}")
-
-       #if epoch>2:
+        epoch_loss = epoch_loss / len(train_loader)
+        print(f"Epoch {epoch + 1}/{epochs}, Epoch loss = {epoch_loss}")
 
         valid_loss = 0.0
-        valid_epoch_loss = 0.0
         model.eval()
         with torch.no_grad():
             for batch in tqdm(test_loader, desc=f" Epoch {epoch + 1} in validation", leave=False):
@@ -92,8 +97,7 @@ def main():
             best_valid_loss = valid_epoch_loss
             torch.save(model.state_dict(), checkpoint_path)
         
-        print(f'\n Training Loss: {epoch_loss[idx]:.3f} Val. Loss: {valid_epoch_loss:.3f}')
-        idx+=1
+        print(f'\n Training Loss: {epoch_loss:.3f} Val. Loss: {valid_epoch_loss:.3f}')
 
 '''     
         DEBUG --> Copy and paste below lines in order to see current output --<  DEBUG
