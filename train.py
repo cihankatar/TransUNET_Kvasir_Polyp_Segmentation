@@ -5,7 +5,6 @@ from torch.optim import Adam
 from tqdm import tqdm, trange
 from one_hot_encode import one_hot,label_encode
 from data_loader import loader
-from Model import UNET
 from Loss import Dice_CE_Loss
 from transunet import TransUNet
 
@@ -34,7 +33,7 @@ def main():
                           mlp_dim=512,
                           block_num=8,
                           encoder_scale=16,
-                          class_num=1)
+                          class_num=1).to(device)
     
     #model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('cpu')))
 

@@ -4,7 +4,7 @@ from einops import rearrange
 from ViT import ViT_c
 
 class EncoderBottleneck(nn.Module):
-    def __init__(self, in_channels, out_channels, stride=1, base_width=64):
+    def __init__(self, in_channels, out_channels, stride=1,):
         super().__init__()
 
         self.downsample = nn.Sequential(
@@ -12,15 +12,13 @@ class EncoderBottleneck(nn.Module):
             nn.BatchNorm2d(out_channels)
         )
 
-        width = int(out_channels * (base_width / 64))
-        
-        self.conv1 = nn.Conv2d(in_channels, width, kernel_size=1, stride=1, bias=False)  
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False)  
         self.norm1 = nn.BatchNorm2d(out_channels)    #nn.BatchNorm2d(width)
 
-        self.conv2 = nn.Conv2d(width, width, kernel_size=3, stride=2, groups=1, padding=1, dilation=1, bias=False)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=2, groups=1, padding=1, dilation=1, bias=False)
         self.norm2 = nn.BatchNorm2d(out_channels)     #nn.BatchNorm2d(width)
 
-        self.conv3 = nn.Conv2d(width, out_channels, kernel_size=1, stride=1, bias=False)
+        self.conv3 = nn.Conv2d(out_channels, out_channels, kernel_size=1, stride=1, bias=False)
         self.norm3 = nn.BatchNorm2d(out_channels)
 
         self.relu = nn.ReLU(inplace=True)
@@ -71,7 +69,7 @@ class Encoder(nn.Module):
     def __init__(self, img_dim, in_channels, out_channels, head_num, mlp_dim, block_num, encoder_scale):
         super().__init__()
 
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=7, stride=2, padding=3, bias=False)
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1, bias=False)
         self.norm1 = nn.BatchNorm2d(out_channels)
         self.relu = nn.ReLU(inplace=True)
 
@@ -151,7 +149,7 @@ class TransUNet(nn.Module):
 if __name__ == '__main__':
     import torch
 
-    transunet = TransUNet(img_dim=512,
+    transunet = TransUNet(img_dim=256,
                           in_channels=3,
                           out_channels=128,
                           head_num=4,
@@ -161,4 +159,4 @@ if __name__ == '__main__':
                           class_num=1)
 
     print(sum(p.numel() for p in transunet.parameters()))
-    print(transunet(torch.randn(1, 3, 512, 512)).shape)
+    print(transunet(torch.randn(1, 3, 256, 256)).shape)
