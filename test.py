@@ -5,7 +5,7 @@ from tqdm import tqdm
 import torch
 from sklearn.metrics import accuracy_score, f1_score, jaccard_score, precision_score, recall_score
 import matplotlib.pyplot as plt
-from Model import UNET
+from transunet import TransUNet
 from data_loader import loader
 
 def calculate_metrics(y_true, y_pred):
@@ -46,17 +46,23 @@ if __name__ == "__main__":
     num_workers = 2
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-    model = UNET(n_classes)
-    model = model.to(device)
-    model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+    model = TransUNet(img_dim=128,
+                          in_channels=3,
+                          out_channels=128,
+                          head_num=4,
+                          mlp_dim=512,
+                          block_num=8,
+                          encoder_scale=16,
+                          class_num=1).to(device)
+    
+    model.load_state_dict(torch.load(checkpoint_path,map_location=torch.device('cpu')))
     model.eval()
     metrics_score = [0.0, 0.0, 0.0, 0.0, 0.0]
 
     
     train_loader,test_loader = loader(batch_size,num_workers,shuffle=True)
 
-    for batch in tqdm(test_loader, desc=f"batches in training", leave=False):
+    for batch in tqdm(test_loader, desc=f"testing ", leave=False):
         images,labels   = batch                
         model_output    = model(images)
 

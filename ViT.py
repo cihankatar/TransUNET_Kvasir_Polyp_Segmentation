@@ -15,6 +15,7 @@ def patching(images,patch_size):
     return img_patches
 
 def get_positional_embeddings(sequence_length, d):
+    
     result = torch.ones(sequence_length, d)
     for i in range(sequence_length):
         for j in range(d):
@@ -26,7 +27,7 @@ def get_positional_embeddings(sequence_length, d):
 class ViT_c (nn.Module):
     def __init__(self, images_dim, input_channel, token_dim, n_heads, mlp_layer_size, t_blocks, patch_size, classification,out_dim=10):
         super().__init__()
-        
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.images_dim = images_dim
         self.c = input_channel
         self.patch_size = patch_size
@@ -48,13 +49,15 @@ class ViT_c (nn.Module):
 
     def forward(self, images):
 
-        self.n_images,self.c,self.h_image,self.w_image = images.shape
-        all_class_token = self.class_token.repeat(self.n_images, 1, 1) 
+        
 
-        patches = patching(images, self.patch_size)
+        self.n_images,self.c,self.h_image,self.w_image = images.shape
+        all_class_token = self.class_token.repeat(self.n_images, 1, 1).to(self.device)
+
+        patches = patching(images, self.patch_size).to(self.device)
 
         linear_emb  = self.linear_map(patches)
-        positional_embeddings = get_positional_embeddings(self.number_token,self.token_dim)
+        positional_embeddings = get_positional_embeddings(self.number_token,self.token_dim).to(self.device)
 
         tokens      = torch.cat((all_class_token,linear_emb),dim=1)
         out         = tokens    +  positional_embeddings.repeat(self.n_images, 1, 1)    # positional embeddings will be added
@@ -73,6 +76,7 @@ class ViTBlock(nn.Module):
 
     def __init__(self, token_dim, n_tokens, mlp_layer_size, num_heads):
         super().__init__() 
+
         self.token_dim      = token_dim
         self.num_heads      = num_heads
         self.mlp_layer_size = mlp_layer_size
@@ -95,6 +99,8 @@ class MSA_Module(nn.Module):
 
     def __init__(self, token_dim, n_tokens, n_heads):
         super().__init__() 
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
         self.n_heads    = n_heads
         self.token_dim  = token_dim
         self.n_tokens   = n_tokens
@@ -108,8 +114,7 @@ class MSA_Module(nn.Module):
     def forward (self, tokens):
         
         self.n, self.number_tokens, self.token_size = tokens.shape
-        result = torch.zeros(self.n, self.number_tokens*self.n_heads, self.token_size)
-        out    = torch.zeros((self.n, self.number_tokens, self.token_size))
+        result = torch.zeros(self.n, self.number_tokens*self.n_heads, self.token_size).to(self.device)
 
         for idx,token in enumerate(tokens):   # 128 batch. each of 65x16*16*3, token size : 50x8   --> 50x8            
             concat      = torch.zeros(self.n_heads, self.number_tokens, self.token_size)        
@@ -131,7 +136,7 @@ class MSA_Module(nn.Module):
         result=self.linear_map(result)
 
         return torch.transpose(result,1,2)
-
+'''
 def main():
     # Loading data
 
@@ -141,3 +146,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+'''

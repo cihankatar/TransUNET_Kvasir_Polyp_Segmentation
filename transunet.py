@@ -4,29 +4,25 @@ from einops import rearrange
 from ViT import ViT_c
 
 class EncoderBottleneck(nn.Module):
-    def __init__(self, in_channels, out_channels, stride):
+    def __init__(self, in_channels, out_channels, stride,):
         super().__init__()
 
         self.downsample = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False),
             nn.BatchNorm2d(out_channels)
         )
-
         self.convlayer=nn.Sequential(
-            nn.Conv2d(in_channels,out_channels,kernel_size=1,stride=1),
-            nn.BatchNorm2d(out_channels),   
-            nn.ReLU(inplace=True),
-            nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1, bias=False),  
-            nn.BatchNorm2d(out_channels),   
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
+            nn.BatchNorm2d(out_channels),     
             nn.ReLU(inplace=True))
-
-    def forward(self, x):            # 1x 128 x 128 x 128
-        x_down  = self.downsample(x)  # 1x 256 x 64 x 64
-        x       = self.convlayer(x)
-        x       = x + x_down
         
-        return x
+    def forward(self, x):            # 1x 128 x 64 x 64
+        x_down = self.downsample(x)  # 1x 256 x 32 x 32
 
+        x = self.convlayer(x)
+        x = x + x_down
+
+        return x
 class DecoderBottleneck(nn.Module):
     def __init__(self, in_channels, out_channels, scale_factor=2):
         super().__init__()
@@ -37,9 +33,6 @@ class DecoderBottleneck(nn.Module):
             nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True)
         )
 
     def forward(self, x, x_concat=None):
@@ -55,6 +48,7 @@ class DecoderBottleneck(nn.Module):
 class Encoder(nn.Module):
     def __init__(self, img_dim, in_channels, out_channels, head_num, mlp_dim, block_num, encoder_scale):
         super().__init__()
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1, bias=False)
         self.norm1 = nn.BatchNorm2d(out_channels)
@@ -73,7 +67,7 @@ class Encoder(nn.Module):
                          mlp_dim, 
                          block_num, 
                          patch_size=1,
-                         classification=False)
+                         classification=False).to(device)
         
         self.conv2 = nn.Conv2d(out_channels * 8, 512, kernel_size=3, stride=1, padding=1)
         self.norm2 = nn.BatchNorm2d(512)
@@ -132,18 +126,3 @@ class TransUNet(nn.Module):
 
         return x
 
-
-if __name__ == '__main__':
-    import torch
-
-    transunet = TransUNet(img_dim=256,
-                          in_channels=3,
-                          out_channels=128,
-                          head_num=4,
-                          mlp_dim=512,
-                          block_num=8,
-                          encoder_scale=16,
-                          class_num=1)
-
-    print(sum(p.numel() for p in transunet.parameters()))
-    print(transunet(torch.randn(1, 3, 256, 256)).shape)
