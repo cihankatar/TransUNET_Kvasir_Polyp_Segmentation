@@ -8,7 +8,7 @@
 #SBATCH -N 1                # Gorev kac node'da calisacak?
 #SBATCH -n 1                # Ayni gorevden kac adet calistirilacak?
 #SBATCH --cpus-per-task 20  # Her bir gorev kac cekirdek kullanacak? Kumeleri kontrol edin.
-#SBATCH --time=05:00:00      # Sure siniri koyun. (HH:MM:SS)
+#SBATCH --time=05:00:00     # Sure siniri koyun. (HH:MM:SS)
 #SBATCH --mail-type=begin        # send email when job begins
 #SBATCH --mail-type=end          # send email when job ends
 #SBATCH --mail-user=cihan.katar@tau.edu.tr

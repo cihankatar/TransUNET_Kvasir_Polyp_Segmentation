@@ -34,9 +34,12 @@ def main():
                           block_num=8,
                           encoder_scale=16,
                           class_num=1).to(device)
-    
-    model.load_state_dict(torch.load(checkpoint_path,map_location=torch.device('cpu')))
-
+   
+   
+   # if torch.cuda.is_available():
+    #    model.load_state_dict(torch.load(checkpoint_path))
+    #else: 
+     #   model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('cpu')))
 
     optimizer = Adam(model.parameters(), lr=l_r)
     loss_function      = Dice_CE_Loss()
