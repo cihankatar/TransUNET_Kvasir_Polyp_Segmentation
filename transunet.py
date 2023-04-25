@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from einops import rearrange
 from ViT import ViT_c
+from ViT_Copy import ViT
 
 class EncoderBottleneck(nn.Module):
     def __init__(self, in_channels, out_channels, stride,):
@@ -64,7 +65,9 @@ class Encoder(nn.Module):
         self.encoder3 = EncoderBottleneck(out_channels * 4, out_channels * 8, stride=2)
 
         self.vit_img_dim = img_dim // encoder_scale
-
+        self.vit = ViT(self.vit_img_dim, out_channels * 8, out_channels * 8,
+                       head_num, mlp_dim, block_num, patch_dim=1, classification=False)
+        
         self.VIT = ViT_c(self.vit_img_dim,
                          out_channels*8, 
                          out_channels*8, 
@@ -85,7 +88,11 @@ class Encoder(nn.Module):
         x2 = self.encoder1(x1)  # 1x 256 x 64 x 64
         x3 = self.encoder2(x2)  # 1x 512 x 32 x 32
         x = self.encoder3(x3)   # 1x 1024 x 16 x 16
-        x = self.VIT(x)
+        
+        #y = x
+        #x = self.VIT(x)
+
+        x = self.vit(x)
         x = rearrange(x, "b (x y) c -> b c x y", x=self.vit_img_dim, y=self.vit_img_dim)  # 1x 1024 x 8 x 8
 
         x = self.conv2(x)

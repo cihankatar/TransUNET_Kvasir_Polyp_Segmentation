@@ -36,8 +36,8 @@ def main():
                           class_num=1).to(device)
    
    
-   # if torch.cuda.is_available():
-    #    model.load_state_dict(torch.load(checkpoint_path))
+    #if torch.cuda.is_available():
+     #   model.load_state_dict(torch.load(checkpoint_path))
     #else: 
      #   model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('cpu')))
 
