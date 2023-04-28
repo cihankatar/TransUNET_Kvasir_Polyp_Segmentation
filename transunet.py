@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from einops import rearrange
 from ViT import ViT_c
-import time as timer
+#import time as timer
 
 
 class EncoderBottleneck(nn.Module):
@@ -87,11 +87,8 @@ class Encoder(nn.Module):
         x2 = self.encoder1(x1)  # 1x 256 x 64 x 64
         x3 = self.encoder2(x2)  # 1x 512 x 32 x 32
         x = self.encoder3(x3)   # 1x 1024 x 16 x 16
-        y = x
-        start1 = timer.time()
-        y = self.VIT(y)
-        end1 = timer.time()
 
+        x = self.VIT(x)
 
         x = rearrange(x, "b (x y) c -> b c x y", x=self.vit_img_dim, y=self.vit_img_dim)  # 1x 1024 x 8 x 8
 
