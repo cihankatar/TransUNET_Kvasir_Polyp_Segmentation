@@ -36,20 +36,19 @@ class ViT_c (nn.Module):
         self.token_dim  = token_dim
         self.number_token = (self.images_dim//self.patch_size)**2+1
         self.classification = classification
-
+        
         self.mlp_layer_size     =   mlp_layer_size
 
         self.linear_map         =   nn.Linear(self.c*(patch_size**2),token_dim)
         self.class_token        =   nn.Parameter(torch.rand(1, token_dim))
         self.blocks             =   nn.ModuleList([ViTBlock(token_dim, self.number_token, mlp_layer_size, n_heads) for _ in range(t_blocks)])
         self.output_pr          =   nn.Softmax()
-        
+        self.positional_embeddings = get_positional_embeddings(self.number_token,self.token_dim).to(self.device)
+
         if self.classification:
             self.linear_classifier = nn.Sequential(nn.Linear(self.token_dim, out_dim), nn.Softmax(dim=-1)  )
 
     def forward(self, images):
-
-        
 
         self.n_images,self.c,self.h_image,self.w_image = images.shape
         all_class_token = self.class_token.repeat(self.n_images, 1, 1).to(self.device)
@@ -57,10 +56,9 @@ class ViT_c (nn.Module):
         patches = patching(images, self.patch_size).to(self.device)
 
         linear_emb  = self.linear_map(patches)
-        positional_embeddings = get_positional_embeddings(self.number_token,self.token_dim).to(self.device)
 
         tokens      = torch.cat((all_class_token,linear_emb),dim=1)
-        out         = tokens    +  positional_embeddings.repeat(self.n_images, 1, 1)    # positional embeddings will be added
+        out         = tokens    +  self.positional_embeddings.repeat(self.n_images, 1, 1)    # positional embeddings will be added
 
         for block in self.blocks:
             out = block(out)
@@ -136,15 +134,10 @@ class MSA_Module(nn.Module):
         result=self.linear_map(result)
 
         return torch.transpose(result,1,2)
-'''
-def main():
-    # Loading data
-
-    model = ViT_c(images_dim=128,input_channel=3, token_dim=512,  n_heads=4, mlp_layer_size=1024, t_blocks=2, patch_size=16,classification=False)
-    
-    print(model(torch.rand(1, 3, 128, 128)).shape)
 
 if __name__ == '__main__':
-    main()
+    # Loading data
 
-'''
+    model = ViT_c(images_dim=128,input_channel=3, token_dim=512,  n_heads=4, mlp_layer_size=1024, t_blocks=6, patch_size=16,classification=False)
+    
+    print(model(torch.rand(1, 3, 128, 128)).shape)
