@@ -66,13 +66,7 @@ class Encoder(nn.Module):
         self.encoder3 = EncoderBottleneck(out_channels * 4, out_channels * 8, stride=2)
 
         self.vit_img_dim = img_dim // encoder_scale
-        start1 = timer.time()
-        
-        self.vit = ViT(self.vit_img_dim, out_channels * 8, out_channels * 8,
-                       head_num, mlp_dim, block_num, patch_dim=1, classification=False)
-        end1 = timer.time()
 
-        start2 = timer.time()
         self.VIT = ViT_c(self.vit_img_dim,
                          out_channels*8, 
                          out_channels*8, 
@@ -82,7 +76,6 @@ class Encoder(nn.Module):
                          patch_size=1,
                          classification=False).to(device)
         
-        end2 = timer.time()
         self.conv2 = nn.Conv2d(out_channels * 8, 512, kernel_size=3, stride=1, padding=1)
         self.norm2 = nn.BatchNorm2d(512)
 
@@ -99,9 +92,6 @@ class Encoder(nn.Module):
         y = self.VIT(y)
         end1 = timer.time()
 
-        start2 = timer.time()
-        x = self.vit(x)
-        end2 = timer.time()
 
         x = rearrange(x, "b (x y) c -> b c x y", x=self.vit_img_dim, y=self.vit_img_dim)  # 1x 1024 x 8 x 8
 
