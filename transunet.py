@@ -2,7 +2,9 @@ import torch
 import torch.nn as nn
 from einops import rearrange
 from ViT import ViT_c
-#import time as timer
+import time
+
+#### ---- CONV & VIT & UPSAMPLE (TRANSUNET)
 
 
 class EncoderBottleneck(nn.Module):
@@ -11,7 +13,7 @@ class EncoderBottleneck(nn.Module):
 
         self.downsample = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False),
-            nn.BatchNorm2d(out_channels)
+            nn.BatchNorm2d(out_channels)       # 256x32x32
         )
         self.convlayer=nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False) ,
@@ -20,7 +22,7 @@ class EncoderBottleneck(nn.Module):
             nn.BatchNorm2d(out_channels),
             nn.Conv2d(out_channels, out_channels, kernel_size=1, stride=1, bias=False),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True))
+            nn.ReLU(inplace=True))            # 256x32x32
 
 
     def forward(self, x):            # 1x 128 x 64 x 64
@@ -30,6 +32,7 @@ class EncoderBottleneck(nn.Module):
         x = x + x_down
 
         return x
+    
 class DecoderBottleneck(nn.Module):
     def __init__(self, in_channels, out_channels, scale_factor=2):
         super().__init__()
@@ -51,6 +54,19 @@ class DecoderBottleneck(nn.Module):
         x = self.layer(x)
         return x
 
+        x = self.decoder1(x, x3)       # 1 x 256 x 16x16
+        x = self.decoder2(x, x2)       # 1 x 128 x 32x32
+        x = self.decoder3(x, x1)       # 1 x 64  x 64x64
+        x = self.decoder4(x)           # 1 x 16  x 128x128
+        x = self.conv1(x)              # 1 x 1   x 128x128
+
+        x = self.conv1(x)       # 2x 128 x 64 x 64
+        x = self.norm1(x)       
+        x1 = self.relu(x)       # 2x 128 x 64 x 64
+
+        x2 = self.encoder1(x1)  # 2x 256 x 32 x 32
+        x3 = self.encoder2(x2)  # 2x 512 x 16 x 16
+        x = self.encoder3(x3)   # 2x 1024 x 8 x 8
 
 class Encoder(nn.Module):
     def __init__(self, img_dim, in_channels, out_channels, head_num, mlp_dim, block_num, encoder_scale):
@@ -79,20 +95,20 @@ class Encoder(nn.Module):
         self.conv2 = nn.Conv2d(out_channels * 8, 512, kernel_size=3, stride=1, padding=1)
         self.norm2 = nn.BatchNorm2d(512)
 
-    def forward(self, x):       # 1x  3 x 256 x 256
-        x = self.conv1(x)       # 1x 128 x 128 x 128
-        x = self.norm1(x)       # 1x 128 x 128 x 128
-        x1 = self.relu(x)       # 1x 128 x 128 x 128
+    def forward(self, x):       # 2x  3 x 128 x 128
+        x = self.conv1(x)       # 2x 128 x 64 x 64
+        x = self.norm1(x)       
+        x1 = self.relu(x)       # 2x 128 x 64 x 64
 
-        x2 = self.encoder1(x1)  # 1x 256 x 64 x 64
-        x3 = self.encoder2(x2)  # 1x 512 x 32 x 32
-        x = self.encoder3(x3)   # 1x 1024 x 16 x 16
+        x2 = self.encoder1(x1)  # 2x 256 x 32 x 32
+        x3 = self.encoder2(x2)  # 2x 512 x 16 x 16
+        x = self.encoder3(x3)   # 2x 1024 x 8 x 8
 
         x = self.VIT(x)
 
         x = rearrange(x, "b (x y) c -> b c x y", x=self.vit_img_dim, y=self.vit_img_dim)  # 1x 1024 x 8 x 8
 
-        x = self.conv2(x)
+        x = self.conv2(x)       # 1x 512 x 8 x 8
         x = self.norm2(x)
         x = self.relu(x)
 
@@ -110,17 +126,17 @@ class Decoder(nn.Module):
 
         self.conv1 = nn.Conv2d(int(out_channels * 1 / 8), class_num, kernel_size=1)
 
-    def forward(self, x, x1, x2, x3):
-        x = self.decoder1(x, x3)
-        x = self.decoder2(x, x2)
-        x = self.decoder3(x, x1)
-        x = self.decoder4(x)
-        x = self.conv1(x)
+    def forward(self, x, x1, x2, x3):  # 1 x 512 x 8x8
+        x = self.decoder1(x, x3)       # 1 x 256 x 16x16
+        x = self.decoder2(x, x2)       # 1 x 128 x 32x32
+        x = self.decoder3(x, x1)       # 1 x 64  x 64x64
+        x = self.decoder4(x)           # 1 x 16  x 128x128
+        x = self.conv1(x)              # 1 x 1   x 128x128
 
         return x
 
 
-class TransUNet(nn.Module):
+class TransUNet_copy(nn.Module):
     def __init__(self, img_dim, in_channels, out_channels, head_num, mlp_dim, block_num, encoder_scale, class_num):
         super().__init__()
 
@@ -135,3 +151,14 @@ class TransUNet(nn.Module):
 
         return x
 
+if __name__ == "__main__":
+
+    start=time.time()
+
+    x = torch.randn((2, 3, 128,128))
+    model = TransUNet_copy(img_dim=128,in_channels=3,out_channels=128,head_num=4,mlp_dim=512,block_num=8,encoder_scale=16,class_num=1)
+    y = model(x)
+    print(x.shape)
+    print(y.shape)
+    end=time.time()
+    print(f'spending time :  {end-start}')

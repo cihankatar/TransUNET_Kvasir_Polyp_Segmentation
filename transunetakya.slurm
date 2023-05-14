@@ -2,13 +2,13 @@
 
 #SBATCH -p akya-cuda       # Kuyruk adi: Uzerinde GPU olan kuyruk olmasina dikkat edin.
 #SBATCH -A ckatar          # Kullanici adi
-#SBATCH -J akya-transunet          # Gonderilen isin ismi
-#SBATCH -o akya-50_transunet.out      # Ciktinin yazilacagi dosya adi
+#SBATCH -J akya-transunet_c          # Gonderilen isin ismi
+#SBATCH -o akya-transunet_c_maxpool_100.out      # Ciktinin yazilacagi dosya adi
 #SBATCH --gres=gpu:4        # Her bir sunucuda kac GPU istiyorsunuz? Kumeleri kontrol edin.
 #SBATCH -N 1                # Gorev kac node'da calisacak?
 #SBATCH -n 1                # Ayni gorevden kac adet calistirilacak?
 #SBATCH --cpus-per-task 20  # Her bir gorev kac cekirdek kullanacak? Kumeleri kontrol edin.
-#SBATCH --time=05:00:00     # Sure siniri koyun. (HH:MM:SS)
+#SBATCH --time=07:00:00     # Sure siniri koyun. (HH:MM:SS)
 #SBATCH --mail-type=begin        # send email when job begins
 #SBATCH --mail-type=end          # send email when job ends
 #SBATCH --mail-user=cihan.katar@tau.edu.tr

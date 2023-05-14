@@ -78,7 +78,7 @@ class ViTBlock(nn.Module):
         self.token_dim      = token_dim
         self.num_heads      = num_heads
         self.mlp_layer_size = mlp_layer_size
-        self.n_tokens     = n_tokens
+        self.n_tokens       = n_tokens
 
         self.layer_norm1    = nn.LayerNorm(token_dim)
         self.layer_norm2    = nn.LayerNorm(token_dim) 
@@ -139,5 +139,5 @@ if __name__ == '__main__':
     # Loading data
 
     model = ViT_c(images_dim=128,input_channel=3, token_dim=512,  n_heads=4, mlp_layer_size=1024, t_blocks=6, patch_size=16,classification=False)
-    
-    print(model(torch.rand(1, 3, 128, 128)).shape)
+
+    print(model(torch.rand(2, 3, 128, 128)).shape)
