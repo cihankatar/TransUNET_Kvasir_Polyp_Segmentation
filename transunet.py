@@ -4,7 +4,7 @@ from einops import rearrange
 from ViT import ViT_c
 import time
 
-#### ---- CONV & VIT & UPSAMPLE (TRANSUNET)
+#### ---- (TRANSUNET) CONV & VIT & UPSAMPLE 
 
 
 class EncoderBottleneck(nn.Module):
@@ -54,19 +54,6 @@ class DecoderBottleneck(nn.Module):
         x = self.layer(x)
         return x
 
-        x = self.decoder1(x, x3)       # 1 x 256 x 16x16
-        x = self.decoder2(x, x2)       # 1 x 128 x 32x32
-        x = self.decoder3(x, x1)       # 1 x 64  x 64x64
-        x = self.decoder4(x)           # 1 x 16  x 128x128
-        x = self.conv1(x)              # 1 x 1   x 128x128
-
-        x = self.conv1(x)       # 2x 128 x 64 x 64
-        x = self.norm1(x)       
-        x1 = self.relu(x)       # 2x 128 x 64 x 64
-
-        x2 = self.encoder1(x1)  # 2x 256 x 32 x 32
-        x3 = self.encoder2(x2)  # 2x 512 x 16 x 16
-        x = self.encoder3(x3)   # 2x 1024 x 8 x 8
 
 class Encoder(nn.Module):
     def __init__(self, img_dim, in_channels, out_channels, head_num, mlp_dim, block_num, encoder_scale):

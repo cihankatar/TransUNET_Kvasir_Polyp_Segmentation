@@ -38,83 +38,84 @@ def main():
 
 
     for idx,model in enumerate(all_models):
-        
-        best_valid_loss = float("inf")
-        print(f"TRAINING FOR MODEL{idx+1} = {model.__class__.__name__}")
-        checkpoint_path = "modelsave/checkpoint_model"+str(idx+1)
+        if idx ==2 :
+            best_valid_loss = float("inf")
+            print(f"TRAINING FOR MODEL{idx+1} = {model.__class__.__name__}")
+            checkpoint_path = "modelsave/checkpoint_model"+str(idx+1)
 
-        optimizer = Adam(model.parameters(), lr=l_r)
-        loss_function = Dice_CE_Loss()
-
-
-        #if torch.cuda.is_available():
-        #    model.load_state_dict(torch.load(checkpoint_path))
-        #else: 
-        #    model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('cpu')))
-
-        for epoch in trange(epochs, desc="Training"):
-
-            epoch_loss = 0.0
-            model.train()
-
-            #for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1} in training", leave=False):
-            for batch in train_loader:
-
-                images,labels   = batch  
-                images,labels   = images.to(device), labels.to(device) 
-
-                start=timer.time()
-
-                model_output    = model(images)
-                
-                if n_classes == 1:
-                    
-                    model_output     = model_output.squeeze()
-                    #label           = label_encode(labels)
-                    train_loss       = loss_function.Dice_BCE_Loss(model_output, labels)
-
-                else:
-                    model_output    = torch.transpose(model_output,1,3) 
-                    targets_m       = one_hot(labels,n_classes)
-                    loss_m          = loss_function.CE_loss_manuel(model_output, targets_m)
-
-                    targets_f       = label_encode(labels) 
-                    train_loss      = loss_function.CE_loss(model_output, targets_f)
+            optimizer = Adam(model.parameters(), lr=l_r)
+            loss_function = Dice_CE_Loss()
 
 
-                epoch_loss     += train_loss.item() 
-                optimizer.zero_grad()
-                train_loss.backward()
-                optimizer.step()
-                end=timer.time()
-                #print(f"batch loss = {train_loss}")
+            if torch.cuda.is_available():
+                model.load_state_dict(torch.load(checkpoint_path))
+            else: 
+                model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('cpu')))
 
-            epoch_loss = epoch_loss / len(train_loader)
-            print(f"Epoch {epoch + 1}/{epochs}, Epoch loss for Model{idx+1} = {model.__class__.__name__} : {epoch_loss}")
+            for epoch in trange(epochs, desc="Training"):
 
-            valid_loss = 0.0
-            model.eval()
+                epoch_loss = 0.0
+                model.train()
 
-            with torch.no_grad():
-                #for batch in tqdm(test_loader, desc=f" Epoch {epoch + 1} in validation", leave=False):
-                
-                for batch in (test_loader):
+                #for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1} in training", leave=False):
+                for batch in train_loader:
+
                     images,labels   = batch  
-                    images,labels   = images.to(device), labels.to(device)   
+                    images,labels   = images.to(device), labels.to(device) 
+
+                    start=timer.time()
+
                     model_output    = model(images)
-                    loss            = loss_function.Dice_BCE_Loss(model_output, labels)
-                    valid_loss     += loss.item()
                     
-                valid_epoch_loss = valid_loss/len(test_loader)
+                    if n_classes == 1:
+                        
+                        model_output     = model_output.squeeze()
+                        #label           = label_encode(labels)
+                        train_loss       = loss_function.Dice_BCE_Loss(model_output, labels)
 
-            if valid_epoch_loss < best_valid_loss:
+                    else:
+                        model_output    = torch.transpose(model_output,1,3) 
+                        targets_m       = one_hot(labels,n_classes)
+                        loss_m          = loss_function.CE_loss_manuel(model_output, targets_m)
 
-                print(f"previous val loss: {best_valid_loss:2.4f} new val loss: {valid_epoch_loss:2.4f}. Saving checkpoint: {checkpoint_path}")
-                best_valid_loss = valid_epoch_loss
-                torch.save(model.state_dict(), checkpoint_path)
-            
-            print(f'\n Model{idx+1} = {model.__class__.__name__} = training Loss: {epoch_loss:.3f}, val. Loss: {valid_epoch_loss:.3f}')
+                        targets_f       = label_encode(labels) 
+                        train_loss      = loss_function.CE_loss(model_output, targets_f)
 
+
+                    epoch_loss     += train_loss.item() 
+                    optimizer.zero_grad()
+                    train_loss.backward()
+                    optimizer.step()
+                    end=timer.time()
+                    #print(f"batch loss = {train_loss}")
+
+                epoch_loss = epoch_loss / len(train_loader)
+                print(f"Epoch {epoch + 1}/{epochs}, Epoch loss for Model{idx+1} = {model.__class__.__name__} : {epoch_loss}")
+
+                valid_loss = 0.0
+                model.eval()
+
+                with torch.no_grad():
+                    #for batch in tqdm(test_loader, desc=f" Epoch {epoch + 1} in validation", leave=False):
+                    
+                    for batch in (test_loader):
+                        images,labels   = batch  
+                        images,labels   = images.to(device), labels.to(device)   
+                        model_output    = model(images)
+                        loss            = loss_function.Dice_BCE_Loss(model_output, labels)
+                        valid_loss     += loss.item()
+                        
+                    valid_epoch_loss = valid_loss/len(test_loader)
+
+                if valid_epoch_loss < best_valid_loss:
+
+                    print(f"previous val loss: {best_valid_loss:2.4f} new val loss: {valid_epoch_loss:2.4f}. Saving checkpoint: {checkpoint_path}")
+                    best_valid_loss = valid_epoch_loss
+                    torch.save(model.state_dict(), checkpoint_path)
+                
+                print(f'\n Model{idx+1} = {model.__class__.__name__} = training Loss: {epoch_loss:.3f}, val. Loss: {valid_epoch_loss:.3f}')
+        else:
+            pass
 
 if __name__ == "__main__":
    main()

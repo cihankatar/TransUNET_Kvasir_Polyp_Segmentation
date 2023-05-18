@@ -2,8 +2,8 @@
 
 #SBATCH -p akya-cuda       # Kuyruk adi: Uzerinde GPU olan kuyruk olmasina dikkat edin.
 #SBATCH -A ckatar          # Kullanici adi
-#SBATCH -J akya-transunet_c          # Gonderilen isin ismi
-#SBATCH -o akya-transunet_c_maxpool_100.out      # Ciktinin yazilacagi dosya adi
+#SBATCH -J akya-transunet_all          # Gonderilen isin ismi
+#SBATCH -o akya-transunet_all_100.out      # Ciktinin yazilacagi dosya adi
 #SBATCH --gres=gpu:4        # Her bir sunucuda kac GPU istiyorsunuz? Kumeleri kontrol edin.
 #SBATCH -N 1                # Gorev kac node'da calisacak?
 #SBATCH -n 1                # Ayni gorevden kac adet calistirilacak?

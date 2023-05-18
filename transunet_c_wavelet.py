@@ -66,8 +66,8 @@ class up(nn.Module):
                                 nn.ReLU(inplace=True))
         
         self.last_up = nn.Sequential(nn.Conv2d(in_c, out_c, kernel_size=3, stride=1,padding=1),
-                        nn.BatchNorm2d(out_c),
-                        nn.ReLU(inplace=True))
+                                nn.BatchNorm2d(out_c),
+                                nn.ReLU(inplace=True))
 
         self.device  = device_f()
 
@@ -136,11 +136,11 @@ class TranswaveUNET_c(nn.Module):
             #self.outputs  = sigmoid_f(self.outputs)
 
         
-    def forward(self, inputs):                           # 2x 3  x 128x128
+    def forward(self, inputs):                             # 2x 3  x 128x128
         
-        s0 = self.first_conv(inputs)                     # 2x 128  x 64x64
+        s0 = self.first_conv(inputs)                       # 2x 128  x 64x64
 
-        coef1, s1 = self.encoder_blocks[0](s0)            # 2x 256 x 32x32
+        coef1, s1 = self.encoder_blocks[0](s0)             # 2x 256 x 32x32
         coef2, s2 = self.encoder_blocks[1](coef1)          # 2x 512 x 16x16
         coef3, _  = self.encoder_blocks[2](coef2)          # 2x 1024 x 8x8
         
